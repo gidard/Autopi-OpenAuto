@@ -1,12 +1,25 @@
-import gpio_pin
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+#######################################################################################################################################
+# Forked from                                                                                                                         #
+# 
+# Autopi                                                                                                                          #
+# https://github.com/autopi-io                                                                                                        #
+#######################################################################################################################################
+
+
 import logging
 import os
 import psutil
 import RPi.GPIO as gpio
 import time
+#import rpi
 
-from messaging import EventDrivenMessageProcessor
-from threading_more import intercept_exit_signal
+#from messaging import EventDrivenMessageProcessor
+from ..utils.threading_more import intercept_exit_signal
+from ..utils import gpio_pin
+from ..modules import rpi
 
 
 log = logging.getLogger(__name__)
@@ -16,7 +29,7 @@ context = {
 }
 
 # Message processor
-edmp = EventDrivenMessageProcessor("spm", context=context, default_hooks={"handler": "query"})
+#edmp = EventDrivenMessageProcessor("spm", context=context, default_hooks={"handler": "query"})
 
 # SPM connection is instantiated during start
 conn = None
@@ -25,7 +38,7 @@ conn = None
 led_pwm = None
 
 
-@edmp.register_hook()
+#@edmp.register_hook()
 def query_handler(cmd, **kwargs):
     """
     Queries a given SPM command.
@@ -54,7 +67,7 @@ def query_handler(cmd, **kwargs):
     return ret
 
 
-@edmp.register_hook()
+#@edmp.register_hook()
 def heartbeat_handler():
     """
     Triggers SPM heartbeat and fires power on event when booting.
@@ -76,14 +89,14 @@ def heartbeat_handler():
 
                 # Trigger last off state event if last boot time is found
                 try:
-                    boot_time = __salt__["rpi.boot_time"]().get("value", None)
+                    boot_time = rpi.boot_time() #__salt__["rpi.boot_time"]().get("value", None)
                     if boot_time == None:
                         log.warning("Last boot time could not be determined")
-                    else:
+                    #else:
                        # Last boot time is considered identical to last power off time because of 'fake-hwclock'
-                        edmp.trigger_event({
-                            "timestamp": boot_time
-                        }, "system/power/last_off")
+                        #edmp.trigger_event({
+                        #    "timestamp": boot_time
+                        #}, "system/power/last_off")
                 except Exception as ex:
                     log.warning("Unable to trigger last system off event: {:}".format(ex))
 
@@ -91,19 +104,19 @@ def heartbeat_handler():
                 if res["last_trigger"]["down"] not in ["none", "rpi"]:
                     log.warning("Recovery due to SPM trigger '{:}'".format(res["last_trigger"]["down"]))
 
-                    edmp.trigger_event({
-                        "trigger": res["last_trigger"]["down"]
-                    }, "system/power/recover")
+                    #edmp.trigger_event({
+                    #    "trigger": res["last_trigger"]["down"]
+                    #}, "system/power/recover")
 
             # Check if state has changed
             if old_state != new_state:
                 context["state"] = new_state
 
                 # Trigger state event
-                edmp.trigger_event({
-                    "trigger": res["last_trigger"]["up"],
-                    "awaken": res["last_state"]["down"]
-                }, "system/power/{:}{:}".format("_" if new_state in ["booting"] else "", new_state))
+                #edmp.trigger_event({
+                #    "trigger": res["last_trigger"]["up"],
+                #    "awaken": res["last_state"]["down"]
+                #}, "system/power/{:}{:}".format("_" if new_state in ["booting"] else "", new_state))
 
     finally:
 
@@ -111,7 +124,7 @@ def heartbeat_handler():
         conn.heartbeat()
 
 
-@edmp.register_hook()
+#@edmp.register_hook()
 def  reset_handler():
     """
     Reset/restart ATtiny. 
@@ -143,7 +156,7 @@ def  reset_handler():
     return ret
 
 
-@edmp.register_hook()
+#@edmp.register_hook()
 def flash_firmware_handler(hex_file, part_id, no_write=True):
     """
     Flashes new SPM firmware to ATtiny.
@@ -160,7 +173,7 @@ def flash_firmware_handler(hex_file, part_id, no_write=True):
         if no_write:
             params.append("-n")
 
-        res = __salt__["cmd.run_all"](" ".join(params))
+        res = 0 #__salt__["cmd.run_all"](" ".join(params))
 
         if res["retcode"] == 0:
             ret["output"] = res["stderr"]
@@ -182,7 +195,7 @@ def flash_firmware_handler(hex_file, part_id, no_write=True):
     return ret
 
 
-@edmp.register_hook(synchronize=False)
+#@edmp.register_hook(synchronize=False)
 def led_pwm_handler(frequency=None, duty_cycle=None):
     """
     Change PWM frequency and/or duty cycle for LED.
@@ -222,7 +235,7 @@ def start(**settings):
         # Initialize SPM connection
         global conn
         if "i2c_conn" in settings:  # Version 2.X
-            from spm2_conn import SPM2Conn
+            from ..utils.spm2_conn import SPM2Conn
 
             conn = SPM2Conn()
             conn.init(settings["i2c_conn"])
@@ -235,17 +248,17 @@ def start(**settings):
             led_pwm.start(settings.get("led_pwm", {}).get("duty_cycle", 50))
 
         else:  # Version 1.X
-            from spm_conn import SPMConn
+            from utils.spm_conn import SPMConn
 
             conn = SPMConn()
             conn.setup()
 
         # Initialize and run message processor
-        edmp.init(__salt__, __opts__,
-            hooks=settings.get("hooks", []),
-            workers=settings.get("workers", []),
-            reactors=settings.get("reactors", []))
-        edmp.run()
+        #edmp.init(__salt__, __opts__,
+        #    hooks=settings.get("hooks", []),
+        #    workers=settings.get("workers", []),
+        #    reactors=settings.get("reactors", []))
+        #edmp.run()
 
     except Exception:
         log.exception("Failed to start SPM manager")

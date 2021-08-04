@@ -1,7 +1,17 @@
-import logging
-import salt.exceptions
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
-from messaging import EventDrivenMessageClient, msg_pack as _msg_pack
+#######################################################################################################################################
+# Forked from                                                                                                                         #
+# 
+# Autopi                                                                                                                          #
+# https://github.com/autopi-io                                                                                                        #
+#######################################################################################################################################
+
+import logging
+#import salt.exceptions
+
+#from messaging import EventDrivenMessageClient, msg_pack as _msg_pack
 
 
 log = logging.getLogger(__name__)
