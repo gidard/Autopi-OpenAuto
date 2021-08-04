@@ -1,11 +1,11 @@
 from __future__ import division
 
-import battery_util
+
 import ConfigParser
 import cProfile as profile
 import datetime
 import _strptime  # Attempt to avoid: Failed to import _strptime because the import lockis held by another thread
-import elm327_proxy
+
 import io
 import json
 import logging
@@ -15,7 +15,7 @@ import os
 import psutil
 import re
 import RPi.GPIO as gpio
-import salt.loader
+#import salt.loader
 import signal
 import subprocess
 import time
@@ -27,6 +27,8 @@ from obd_conn import OBDConn, decode_can_frame_for, FILTER_TYPE_CAN_PASS, FILTER
 from messaging import EventDrivenMessageProcessor, extract_error_from, filter_out_unchanged
 from threading_more import intercept_exit_signal
 from timeit import default_timer as timer
+from ..utils import battery_util
+from ..utils import elm327_proxy
 
 
 log = logging.getLogger(__name__)
