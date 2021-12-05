@@ -167,7 +167,7 @@ while True:
  
     values = [get_temp(), get_cpu_temp(), get_clock("core"), get_clock("arm"), get_volt(), elapsed]
     
-    print(" {0:.0f}°C - {1:.0f}/{2:.0f} MHz - {3:.2f} V".format(values[0], values[1], values[2], values[3], values[4]))
+    print(" {0:.0f}°C - {1:.0f}°C - {2:.0f}/{3:.0f} MHz - {4:.2f} V".format(values[0], values[1], values[2], values[3], values[4]))
     write_csv("a", values)
         
     time.sleep(delay)
