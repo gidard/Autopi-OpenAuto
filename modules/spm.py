@@ -16,7 +16,7 @@ import logging
 
 log = logging.getLogger(__name__)
 
-client = EventDrivenMessageClient("spm")
+#client = EventDrivenMessageClient("spm")
 
 
 def __init__(opts):

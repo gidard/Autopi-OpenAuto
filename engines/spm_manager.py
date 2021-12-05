@@ -14,7 +14,6 @@ import os
 import psutil
 import RPi.GPIO as gpio
 import time
-#import rpi
 
 #from messaging import EventDrivenMessageProcessor
 from ..utils.threading_more import intercept_exit_signal
