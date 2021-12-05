@@ -19,6 +19,8 @@ import time
 from ..utils.threading_more import intercept_exit_signal
 from ..utils import gpio_pin
 from ..modules import rpi
+from ..utils.spm2_conn import SPM2Conn
+
 
 
 log = logging.getLogger(__name__)
@@ -216,10 +218,15 @@ def led_pwm_handler(frequency=None, duty_cycle=None):
 
 
 @intercept_exit_signal
-def start(**settings):
+def start():
+
+    led_pwm_frequency = 2
+    led_pwm_duty_cycle =50
+    spm_settings = {"port":1, "address":8}
+
     try:
         if log.isEnabledFor(logging.DEBUG):
-            log.debug("Starting SPM manager with settings: {:}".format(settings))
+            log.debug("Starting SPM manager with settings: {:}".format(spm_settings))
 
         # Give process higher priority
         psutil.Process(os.getpid()).nice(-1)
@@ -233,31 +240,16 @@ def start(**settings):
 
         # Initialize SPM connection
         global conn
-        if "i2c_conn" in settings:  # Version 2.X
-            from ..utils.spm2_conn import SPM2Conn
+        
+        conn = SPM2Conn()
+        conn.init(spm_settings)
 
-            conn = SPM2Conn()
-            conn.init(settings["i2c_conn"])
+        # Initialize LED GPIO
+        gpio.setup(gpio_pin.LED, gpio.OUT)
 
-            # Initialize LED GPIO
-            gpio.setup(gpio_pin.LED, gpio.OUT)
-
-            global led_pwm
-            led_pwm = gpio.PWM(gpio_pin.LED, settings.get("led_pwm", {}).get("frequency", 2))
-            led_pwm.start(settings.get("led_pwm", {}).get("duty_cycle", 50))
-
-        else:  # Version 1.X
-            from utils.spm_conn import SPMConn
-
-            conn = SPMConn()
-            conn.setup()
-
-        # Initialize and run message processor
-        #edmp.init(__salt__, __opts__,
-        #    hooks=settings.get("hooks", []),
-        #    workers=settings.get("workers", []),
-        #    reactors=settings.get("reactors", []))
-        #edmp.run()
+        global led_pwm
+        led_pwm = gpio.PWM(gpio_pin.LED, led_pwm_frequency)
+        led_pwm.start(led_pwm_duty_cycle)
 
     except Exception:
         log.exception("Failed to start SPM manager")
