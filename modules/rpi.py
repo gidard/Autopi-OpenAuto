@@ -54,7 +54,9 @@ def temp_cpu():
     Current temperature of the ARM CPU.
     """
 
-    raw = 1 #__salt__["cp.get_file_str"]("/sys/class/thermal/thermal_zone0/temp")
+    tempFile = open( "/sys/class/thermal/thermal_zone0/temp" )
+    raw = tempFile.read() #__salt__["cp.get_file_str"]("/sys/class/thermal/thermal_zone0/temp")
+    tempFile.close()
 
     return {
         "value": float(raw) / 1000,
@@ -67,7 +69,7 @@ def temp_gpu():
     Current temperature of the GPU.
     """
 
-    raw = 1 #__salt__["cmd.run"]("vcgencmd measure_temp")
+    raw = os.popen("vcgencmd measure_temp").readline() #__salt__["cmd.run"]("vcgencmd measure_temp")
     match = _gpu_temp_regex.match(raw)
 
     ret = match.groupdict()
@@ -134,6 +136,12 @@ def get_temp():
     
     return temp_f
 
+def get_cpu_temp():
+    tempFile = open( "/sys/class/thermal/thermal_zone0/temp" )
+    cpu_temp = tempFile.read()
+    tempFile.close()
+    return round(float(cpu_temp)/1000, 2)
+
 def get_clock(part):
     
     clock_core_r = os.popen("vcgencmd measure_clock " + part).readline()
@@ -153,13 +161,13 @@ print(" Raspberry Pi SoC values :")
 print(" =========================")
 print
 
-write_csv("w", ["temp", "core freq", "arm freq", "volt", "sec"])
+write_csv("w", ["temp", "cpu_temp", "core freq", "arm freq", "volt", "sec"])
 
 while True:
  
-    values = [get_temp(), get_clock("core"), get_clock("arm"), get_volt(), elapsed]
+    values = [get_temp(), get_cpu_temp(), get_clock("core"), get_clock("arm"), get_volt(), elapsed]
     
-    print(" {0:.0f}°C - {1:.0f}/{2:.0f} MHz - {3:.2f} V".format(values[0], values[1], values[2], values[3]))
+    print(" {0:.0f}°C - {1:.0f}/{2:.0f} MHz - {3:.2f} V".format(values[0], values[1], values[2], values[3], values[4]))
     write_csv("a", values)
         
     time.sleep(delay)
